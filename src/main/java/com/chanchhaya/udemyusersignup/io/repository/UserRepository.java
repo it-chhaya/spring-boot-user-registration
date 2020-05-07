@@ -1,4 +1,4 @@
-package com.chanchhaya.udemyusersignup.repository;
+package com.chanchhaya.udemyusersignup.io.repository;
 
 import com.chanchhaya.udemyusersignup.io.entity.UserEntity;
 import org.springframework.data.repository.CrudRepository;

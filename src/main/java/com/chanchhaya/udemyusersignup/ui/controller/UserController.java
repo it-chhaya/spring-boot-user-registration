@@ -9,8 +9,12 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
+@CrossOrigin
 @RestController
-@RequestMapping("users")    // http://localhost:8080/users
+@RequestMapping("api/users")    // http://localhost:8080/api/users
 public class UserController {
 
     UserService userService;
@@ -21,8 +25,21 @@ public class UserController {
     }
 
     @GetMapping()
-    public String getUser() {
-        return "get user was called";
+    public List<UserRest> findAllUsers() {
+
+       List<UserDto> storedAllUsers = userService.findAllUsers();
+       List<UserRest> returnUserRests = new ArrayList<>();
+
+       UserRest userRest = null;
+
+       for (UserDto storedUser : storedAllUsers) {
+           userRest = new UserRest();
+           BeanUtils.copyProperties(storedUser, userRest);
+           returnUserRests.add(userRest);
+       }
+
+       return returnUserRests;
+
     }
 
     @PostMapping()

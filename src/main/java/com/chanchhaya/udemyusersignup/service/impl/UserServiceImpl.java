@@ -1,12 +1,18 @@
 package com.chanchhaya.udemyusersignup.service.impl;
 
+import com.chanchhaya.udemyusersignup.exceptions.UserServiceException;
 import com.chanchhaya.udemyusersignup.io.entity.UserEntity;
 import com.chanchhaya.udemyusersignup.io.repository.UserRepository;
 import com.chanchhaya.udemyusersignup.service.UserService;
 import com.chanchhaya.udemyusersignup.shared.Utils;
 import com.chanchhaya.udemyusersignup.shared.dto.UserDto;
+import com.chanchhaya.udemyusersignup.ui.model.response.ErrorMessage;
+import com.chanchhaya.udemyusersignup.ui.model.response.ErrorMessages;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -14,6 +20,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import java.nio.file.attribute.UserPrincipalNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -88,9 +95,75 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto getUser(String email) {
+
         UserEntity userEntity = userRepository.findByEmail(email);
         UserDto returnValue = new UserDto();
         BeanUtils.copyProperties(userEntity, returnValue);
+        return returnValue;
+
+    }
+
+    @Override
+    public UserDto getUserByUserId(String userId) throws RuntimeException {
+
+        UserDto returnValue = new UserDto();
+        UserEntity userEntity = userRepository.findByUserId(userId);
+
+        if (userEntity == null)
+            throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
+
+        BeanUtils.copyProperties(userEntity, returnValue);
+
+        return returnValue;
+
+    }
+
+    @Override
+    public UserDto updateUser(String userId, UserDto user) {
+
+        UserDto returnValue = new UserDto();
+
+        UserEntity userEntity = userRepository.findByUserId(userId);
+
+        if (userEntity == null)
+            throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
+
+        userEntity.setFirstName(user.getFirstName());
+        userEntity.setLastName(user.getLastName());
+
+        UserEntity updatedUser = userRepository.save(userEntity);
+
+        BeanUtils.copyProperties(updatedUser, returnValue);
+
+        return returnValue;
+    }
+
+    @Override
+    public void deleteUser(String userId) {
+        UserEntity userEntity = userRepository.findByUserId(userId);
+
+        if (userEntity == null)
+            throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
+
+        userRepository.delete(userEntity);
+    }
+
+    @Override
+    public List<UserDto> getUsers(int page, int limit) {
+
+        List<UserDto> returnValue = new ArrayList<>();
+
+        Pageable pageable = PageRequest.of(page, limit);
+
+        Page<UserEntity> usersPage = userRepository.findAll(pageable);
+        List<UserEntity> users = usersPage.getContent();
+
+        for (UserEntity userEntity : users) {
+            UserDto userDto = new UserDto();
+            BeanUtils.copyProperties(userEntity, userDto);
+            returnValue.add(userDto);
+        }
+
         return returnValue;
     }
 

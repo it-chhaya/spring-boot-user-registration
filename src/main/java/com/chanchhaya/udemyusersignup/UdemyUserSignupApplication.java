@@ -1,5 +1,6 @@
 package com.chanchhaya.udemyusersignup;
 
+import com.chanchhaya.udemyusersignup.security.AppProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -27,5 +28,10 @@ public class UdemyUserSignupApplication extends SpringBootServletInitializer {
     @Bean
     public SpringApplicationContext springApplicationContext() {
         return new SpringApplicationContext();
+    }
+
+    @Bean(name = "AppProperties")
+    public AppProperties getAppProperties() {
+        return new AppProperties();
     }
 }

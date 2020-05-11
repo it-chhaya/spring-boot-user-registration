@@ -5,9 +5,11 @@ import com.chanchhaya.udemyusersignup.io.entity.UserEntity;
 import com.chanchhaya.udemyusersignup.io.repository.UserRepository;
 import com.chanchhaya.udemyusersignup.service.UserService;
 import com.chanchhaya.udemyusersignup.shared.Utils;
+import com.chanchhaya.udemyusersignup.shared.dto.AddressDto;
 import com.chanchhaya.udemyusersignup.shared.dto.UserDto;
 import com.chanchhaya.udemyusersignup.ui.model.response.ErrorMessage;
 import com.chanchhaya.udemyusersignup.ui.model.response.ErrorMessages;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -52,10 +54,21 @@ public class UserServiceImpl implements UserService {
     public UserDto createUser(UserDto user) {
 
         UserEntity checkStoredUserDetails = userRepository.findByEmail(user.getEmail());
-        if (checkStoredUserDetails != null) throw new RuntimeException("Record already exists");
+        if (checkStoredUserDetails != null)
+            throw new RuntimeException("Record already exists");
 
-        UserEntity userEntity = new UserEntity();
-        BeanUtils.copyProperties(user, userEntity);
+        for (int i=0; i < user.getAddresses().size(); i++) {
+            AddressDto addressDto = user.getAddresses().get(i);
+            addressDto.setUserDetails(user);
+            addressDto.setAddressId(utils.generateAddressId(30));
+            user.getAddresses().set(i, addressDto);
+        }
+
+        //UserEntity userEntity = new UserEntity();
+        //BeanUtils.copyProperties(user, userEntity);
+        ModelMapper modelMapper = new ModelMapper();
+        UserEntity userEntity = modelMapper.map(user, UserEntity.class);
+
 
         // Set encrypted password because this column cannot be null in UserEntity class
         userEntity.setEncryptedPassword(bCryptPasswordEncoder.encode(user.getPassword()));
@@ -65,8 +78,8 @@ public class UserServiceImpl implements UserService {
 
         UserEntity storedUserDetails = userRepository.save(userEntity);
 
-        UserDto returnValue = new UserDto();
-        BeanUtils.copyProperties(storedUserDetails, returnValue);
+        //BeanUtils.copyProperties(storedUserDetails, returnValue);
+        UserDto returnValue = modelMapper.map(storedUserDetails, UserDto.class);
 
         return returnValue;
 

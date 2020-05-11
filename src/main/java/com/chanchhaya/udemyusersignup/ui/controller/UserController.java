@@ -10,6 +10,7 @@ import com.chanchhaya.udemyusersignup.ui.model.response.OperationStatusModel;
 import com.chanchhaya.udemyusersignup.ui.model.response.UserRest;
 import com.chanchhaya.udemyusersignup.utils.enums.RequestOperationName;
 import com.chanchhaya.udemyusersignup.utils.enums.RequestOperationStatus;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -54,13 +55,16 @@ public class UserController {
         if (userDetails.getFirstName().isEmpty())
             throw new UserServiceException(ErrorMessages.MISSING_REQUIRED_FIELD.getErrorMessage());
 
-        UserRest returnValue = new UserRest();
-        UserDto userDto = new UserDto();
+        /* Use ModelMapper instead */
+        //UserDto userDto = new UserDto();
+        //BeanUtils.copyProperties(userDetails, userDto);
 
-        BeanUtils.copyProperties(userDetails, userDto);
+        ModelMapper modelMapper = new ModelMapper();
+        UserDto userDto = modelMapper.map(userDetails, UserDto.class);
 
         UserDto createdUser = userService.createUser(userDto);
-        BeanUtils.copyProperties(createdUser, returnValue);
+        //BeanUtils.copyProperties(createdUser, returnValue);
+        UserRest returnValue = modelMapper.map(createdUser, UserRest.class);
 
         return returnValue;
 
@@ -86,7 +90,6 @@ public class UserController {
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}
     )
     public OperationStatusModel deleteUser(@PathVariable String userId) {
-
         OperationStatusModel returnValue = new OperationStatusModel();
         returnValue.setOperationName(RequestOperationName.DELETE.name());
 

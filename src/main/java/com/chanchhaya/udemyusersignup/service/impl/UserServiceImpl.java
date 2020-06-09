@@ -69,17 +69,21 @@ public class UserServiceImpl implements UserService {
         ModelMapper modelMapper = new ModelMapper();
         UserEntity userEntity = modelMapper.map(user, UserEntity.class);
 
-
+        String publicUserId = utils.generateUserId(30);
         // Set encrypted password because this column cannot be null in UserEntity class
         userEntity.setEncryptedPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         // Set userId because it doesn't exist in UserDetailsRequestModel
         // Using utils for generating userId for secure purpose
-        userEntity.setUserId(utils.generateUserId(30));
+        userEntity.setUserId(publicUserId);
+        userEntity.setEmailVerificationToken(utils.generateEmailVerificationToken(publicUserId));
+        //userEntity.setEmailVerificationStatus(false);
 
         UserEntity storedUserDetails = userRepository.save(userEntity);
 
         //BeanUtils.copyProperties(storedUserDetails, returnValue);
         UserDto returnValue = modelMapper.map(storedUserDetails, UserDto.class);
+
+        System.out.println(returnValue);
 
         return returnValue;
 
@@ -185,9 +189,29 @@ public class UserServiceImpl implements UserService {
 
         UserEntity userEntity = userRepository.findByEmail(email);
 
-        if (ObjectUtils.isEmpty(userEntity)) throw new UsernameNotFoundException(email);
+        if (userEntity == null)
+            throw new UsernameNotFoundException(email);
 
         return new User(userEntity.getEmail(), userEntity.getEncryptedPassword(), new ArrayList<>());
     }
 
+    @Override
+    public boolean verifyEmailToken(String token) {
+
+        boolean returnValue = false;
+
+        // Find user by token
+        UserEntity userEntity = userRepository.findUserByEmailVerificationToken(token);
+
+        if (userEntity != null) {
+            boolean hasTokenExpired = Utils.hasTokenExpired(token);
+            if (!hasTokenExpired) {
+                userEntity.setEmailVerificationToken(null);
+                userEntity.setEmailVerificationStatus(Boolean.TRUE);
+                userRepository.save(userEntity);
+                returnValue = true;
+            }
+        }
+        return returnValue;
+    }
 }

@@ -1,6 +1,7 @@
 package com.chanchhaya.udemyusersignup.security;
 
 import com.chanchhaya.udemyusersignup.service.UserService;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -8,7 +9,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
+@Configuration
 @EnableWebSecurity
 public class WebSecurity extends WebSecurityConfigurerAdapter {
 
@@ -26,6 +29,8 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers(HttpMethod.POST, SecurityConstants.SIGN_UP_URL)
                 .permitAll()
+                .antMatchers(HttpMethod.GET, SecurityConstants.VERIFY_EMAIL_URL)
+                .permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .addFilter(getAuthenticationFilter())
@@ -42,6 +47,13 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
     public AuthenticationFilter getAuthenticationFilter() throws Exception {
         AuthenticationFilter filter = new AuthenticationFilter(authenticationManager());
         filter.setFilterProcessesUrl(SecurityConstants.LOG_IN_URL);
+
+        // => Possible configure for AuthenticationFilter
+        //filter.setAuthenticationSuccessHandler(this::loginSuccess);
+        //filter.setAuthenticationFailureHandler(this::loginFailure);
+        //filter.setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher("/login", "POST"));
+
+
         return filter;
     }
 

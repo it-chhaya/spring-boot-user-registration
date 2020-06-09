@@ -2,6 +2,6 @@ package com.chanchhaya.udemyusersignup.utils.enums;
 
 public enum RequestOperationName {
 
-    DELETE
+    DELETE, VERIFY_EMAIL
 
 }
